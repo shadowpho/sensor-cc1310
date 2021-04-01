@@ -94,7 +94,7 @@ extern "C"
 #define CONFIG_ORPHAN_BACKOFF_INTERVAL 300000
 
 /*! Setting for Phy ID */
-#define CONFIG_PHY_ID                (APIMAC_STD_ETSI_863_PHY_3)
+#define CONFIG_PHY_ID                (APIMAC_STD_US_915_PHY_1)
 
 /*! MAC Parameter */
 /*! Min BE - Minimum Backoff Exponent */
@@ -137,7 +137,7 @@ extern "C"
  To enable CC1190, use
  #define CONFIG_RANGE_EXT_MODE       APIMAC_HIGH_GAIN_MODE
 */
-#define CONFIG_RANGE_EXT_MODE       APIMAC_NO_EXTENDER
+#define CONFIG_RANGE_EXT_MODE       APIMAC_HIGH_GAIN_MODE
 
 /*! Setting Default Key*/
 #define KEY_TABLE_DEFAULT_KEY {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0,\
@@ -265,7 +265,7 @@ extern "C"
  lowering this value will help reduce saturation */
 #ifndef DeviceFamily_CC13X2
 #if CONFIG_RANGE_EXT_MODE
-#define CONFIG_TRANSMIT_POWER        26
+#define CONFIG_TRANSMIT_POWER        18
 #else
 #if ((CONFIG_PHY_ID == APIMAC_GENERIC_CHINA_433_PHY_128) || (CONFIG_PHY_ID == APIMAC_GENERIC_CHINA_LRM_433_PHY_130))
 #define CONFIG_TRANSMIT_POWER        14

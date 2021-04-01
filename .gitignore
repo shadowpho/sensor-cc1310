@@ -1,0 +1,13 @@
+
+*.obj
+*.mk
+*.d
+*.out
+Debug/sensor_CC1310_LAUNCHXL_tirtos_ccs.map
+*.opt
+Debug
+.settings/org.eclipse.core.resources.prefs
+.settings/com.ti.ccstudio.project.core.prefs
+.launches/sensor_CC1310_LAUNCHXL_tirtos_ccs.launch
+.settings/org.eclipse.core.resources.prefs
+.settings/com.ti.ccstudio.project.core.prefs
