@@ -82,7 +82,7 @@ extern "C"
 
 /*! If defined, builds the image with all the modes of operation
     (frequency hopping, beacon mode and non beacon mode) */
-#define FEATURE_ALL_MODES
+#undef FEATURE_ALL_MODES
 
 /*! If defined, builds the image with the frequency mode of operation */
 #undef FEATURE_FREQ_HOP_MODE
@@ -91,7 +91,7 @@ extern "C"
 #undef FEATURE_BEACON_MODE
 
 /*! If defined, builds the image with non beacon mode of operation */
-#undef FEATURE_NON_BEACON_MODE
+#define FEATURE_NON_BEACON_MODE
 
 /*! If defined, builds the image with the mac layer security turned on */
 #define FEATURE_MAC_SECURITY

@@ -137,7 +137,7 @@ extern "C"
  To enable CC1190, use
  #define CONFIG_RANGE_EXT_MODE       APIMAC_HIGH_GAIN_MODE
 */
-#define CONFIG_RANGE_EXT_MODE       APIMAC_HIGH_GAIN_MODE
+#define CONFIG_RANGE_EXT_MODE       APIMAC_NO_EXTENDER
 
 /*! Setting Default Key*/
 #define KEY_TABLE_DEFAULT_KEY {0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde, 0xf0,\
@@ -196,14 +196,14 @@ extern "C"
   must be less than 50. Stack will allocate memory proportional
  to the number of end devices requested.
  */
-#define FH_NUM_NON_SLEEPY_HOPPING_NEIGHBORS  2
+#define FH_NUM_NON_SLEEPY_HOPPING_NEIGHBORS  0
 /*!
  The number of non sleepy fixed channel end devices to be supported.
  It is to be noted that the total number of non sleepy devices supported
   must be less than 50. Stack will allocate memory proportional
  to the number of end devices requested.
  */
-#define FH_NUM_NON_SLEEPY_FIXED_CHANNEL_NEIGHBORS  2
+#define FH_NUM_NON_SLEEPY_FIXED_CHANNEL_NEIGHBORS  0
 
 /*!
  Dwell Time: The duration for which a non sleepy end device shall
