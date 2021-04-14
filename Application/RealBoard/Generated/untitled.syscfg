@@ -1,0 +1,118 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "CC1310RHB" --package "RHB" --part "Default" --product "simplelink_cc13x0_sdk@4.10.03.10"
+ * @versions {"data":"2021031521","timestamp":"2021031521","tool":"1.8.0+1863","templates":null}
+ */
+
+/**
+ * Import the modules used in this configuration.
+ */
+const ADC       = scripting.addModule("/ti/drivers/ADC", {}, false);
+const ADC1      = ADC.addInstance();
+const ADC2      = ADC.addInstance();
+const ADC3      = ADC.addInstance();
+const ADC4      = ADC.addInstance();
+const GPIO      = scripting.addModule("/ti/drivers/GPIO", {}, false);
+const GPIO1     = GPIO.addInstance();
+const GPIO2     = GPIO.addInstance();
+const I2C       = scripting.addModule("/ti/drivers/I2C", {}, false);
+const I2C1      = I2C.addInstance();
+const NVS       = scripting.addModule("/ti/drivers/NVS", {}, false);
+const NVS1      = NVS.addInstance();
+const PWM       = scripting.addModule("/ti/drivers/PWM", {}, false);
+const PWM1      = PWM.addInstance();
+const PWM2      = PWM.addInstance();
+const Power     = scripting.addModule("/ti/drivers/Power");
+const RF        = scripting.addModule("/ti/drivers/RF");
+const RTOS      = scripting.addModule("/ti/drivers/RTOS");
+const Timer     = scripting.addModule("/ti/drivers/Timer", {}, false);
+const Timer3    = Timer.addInstance();
+const UART      = scripting.addModule("/ti/drivers/UART", {}, false);
+const UART1     = UART.addInstance();
+const Watchdog  = scripting.addModule("/ti/drivers/Watchdog", {}, false);
+const Watchdog1 = Watchdog.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+ADC1.adjustSampleValue = true;
+ADC1.internalSignal    = "Battery Channel";
+ADC1.$name             = "ADC_BatteryChannel";
+
+ADC2.adjustSampleValue = true;
+ADC2.internalSignal    = "Decoupling Channel";
+ADC2.$name             = "ADC_DCOUPL";
+
+ADC3.$name          = "ADC_GROUND";
+ADC3.internalSignal = "Ground Channel";
+
+ADC4.$name                     = "Board_DIO13_Batt";
+ADC4.adjustSampleValue         = true;
+ADC4.adc.adcPin.$assign        = "26";
+ADC4.adcPinInstance.$name      = "Board_PIN2";
+ADC4.adcPinInstance.hysteresis = true;
+
+GPIO1.$name             = "Interrupt";
+GPIO1.pull              = "Pull Down";
+GPIO1.gpioPin.$assign   = "6";
+GPIO1.pinInstance.$name = "Board_PIN5";
+
+GPIO2.$name             = "Sensor_Power";
+GPIO2.mode              = "Output";
+GPIO2.outputStrength    = "High";
+GPIO2.gpioPin.$assign   = "9";
+GPIO2.pinInstance.$name = "Board_PIN7";
+
+I2C1.$name                = "Board_I2C";
+I2C1.maxBitRate           = 400000;
+I2C1.i2c.sdaPin.$assign   = "16";
+I2C1.i2c.sclPin.$assign   = "15";
+I2C1.sdaPinInstance.$name = "Board_PIN3";
+I2C1.clkPinInstance.$name = "Board_PIN4";
+I2C1.clkPinInstance.mode  = "Input";
+I2C1.clkPinInstance.pull  = "Pull Down";
+
+NVS1.$name               = "Board_NVS0";
+NVS1.internalFlash.$name = "ti_drivers_nvs_NVSCC26XX0";
+
+PWM1.$name                            = "LED1";
+PWM1.timerObject.$name                = "Board_TIMER2";
+PWM1.timerObject.timer.pwmPin.$assign = "22";
+PWM1.timerObject.pwmPinInstance.$name = "Board_PIN6";
+PWM1.timerObject.pwmPinInstance.mode  = "Input";
+PWM1.timerObject.pwmPinInstance.pull  = "Pull Down";
+
+PWM2.$name                            = "LED2";
+PWM2.timerObject.$name                = "Board_TIMER3";
+PWM2.timerObject.timer.pwmPin.$assign = "23";
+PWM2.timerObject.pwmPinInstance.$name = "Board_PIN8";
+PWM2.timerObject.pwmPinInstance.mode  = "Input";
+PWM2.timerObject.pwmPinInstance.pull  = "Pull Down";
+
+RF.xoscNeeded = false;
+
+Timer3.$name = "Board_TIMER0";
+
+UART1.$name                     = "Board_UART0";
+UART1.ringBufferSize            = 128;
+UART1.dataDirection             = "Send Only";
+UART1.uart.txPin.$assign        = "7";
+UART1.txPinInstance.$name       = "Board_PIN0";
+UART1.txPinInstance.outputState = "High";
+
+Watchdog1.$name  = "Board_WATCHDOG0";
+Watchdog1.period = 10000;
+
+/**
+ * Pinmux solution for unlocked pins/peripherals. This ensures that minor changes to the automatic solver in a future
+ * version of the tool will not impact the pinmux you originally saw.  These lines can be completely deleted in order to
+ * re-solve from scratch.
+ */
+ADC4.adc.$suggestSolution               = "ADC0";
+I2C1.i2c.$suggestSolution               = "I2C0";
+PWM1.timerObject.timer.$suggestSolution = "GPTM1";
+PWM2.timerObject.timer.$suggestSolution = "GPTM1";
+Timer3.timer.$suggestSolution           = "GPTM0";
+UART1.uart.$suggestSolution             = "UART0";
+Watchdog1.watchdog.$suggestSolution     = "WDT0";

@@ -11,3 +11,8 @@ Debug
 .launches/sensor_CC1310_LAUNCHXL_tirtos_ccs.launch
 .settings/org.eclipse.core.resources.prefs
 .settings/com.ti.ccstudio.project.core.prefs
+src/sysbios/sysbios.aem3
+src/sysbios/rom_sysbios.obj
+src/sysbios/rom_sysbios.aem3
+src/sysbios/m3_Hwi_asm.obj
+src/sysbios/BIOS.obj

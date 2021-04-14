@@ -425,6 +425,7 @@ int main(void)
     }
 #endif /* FEATURE_BLE_OAD */
 
+    Board_shutDownExtFlash();
 #if defined(POWER_MEAS)
     /* Disable external flash for power measurements */
     Board_shutDownExtFlash();
