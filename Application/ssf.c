@@ -68,9 +68,7 @@
 #include "util_timer.h"
 #include "mac_util.h"
 #include "board_key.h"
-#ifndef POWER_MEAS
-#include "board_lcd.h"
-#endif
+
 #include "board_led.h"
 #if defined(DeviceFamily_CC13X0) || defined(DeviceFamily_CC13X2)
 #include "board_gpio.h"
@@ -337,9 +335,6 @@ void Ssf_init(void *sem)
     }
 
 #ifndef POWER_MEAS
-    /* Initialize the LCD */
-    Board_LCD_open();
-
     /* Initialize the LEDs */
     Board_Led_initialize();
 #endif /* POWER_MEAS */

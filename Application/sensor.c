@@ -57,7 +57,6 @@
 #include "sensor.h"
 #include "config.h"
 #include "board_led.h"
-#include "board_lcd.h"
 
 #ifdef FEATURE_NATIVE_OAD
 #include "oad_client.h"
@@ -430,13 +429,13 @@ void Sensor_process(void)
     /* Start the collector device in the network */
     if(Sensor_events & SENSOR_START_EVT)
     {
-        LCD_WRITE_STRING("Start Event", 6);
+
         ApiMac_deviceDescriptor_t devInfo;
         Llc_netInfo_t parentInfo;
 
         if(Ssf_getNetworkInfo(&devInfo, &parentInfo ) == true)
         {
-            LCD_WRITE_STRING("Found network info!", 6);
+
             Ssf_configSettings_t configInfo;
 #ifdef FEATURE_MAC_SECURITY
             ApiMac_status_t stat;
@@ -445,7 +444,7 @@ void Sensor_process(void)
             /* Do we have config settings? */
             if(Ssf_getConfigInfo(&configInfo) == true)
             {
-                LCD_WRITE_STRING("We have config settings!", 6);
+
                 /* Save the config information */
                 configSettings.frameControl = configInfo.frameControl;
                 configSettings.reportingInterval = configInfo.reportingInterval;

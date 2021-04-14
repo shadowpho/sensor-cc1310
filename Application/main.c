@@ -425,15 +425,6 @@ int main(void)
     }
 #endif /* FEATURE_BLE_OAD */
 
-    Board_shutDownExtFlash();
-#if defined(POWER_MEAS)
-    /* Disable external flash for power measurements */
-    Board_shutDownExtFlash();
-#endif
-
-#if defined(FEATURE_BLE_OAD) || defined(FEATURE_NATIVE_OAD)
-    SPI_init();
-#endif
 
 #ifndef POWER_MEAS
 #if defined(BOARD_DISPLAY_USE_UART)

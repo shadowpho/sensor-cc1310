@@ -4,6 +4,7 @@
  *
  *  DO NOT EDIT - This file is generated for the CC1310RHB
  *  by the SysConfig tool.
+ *  haha well this is about to be fun
  */
 #ifndef Board_h
 #define Board_h
@@ -26,6 +27,7 @@
 extern "C" {
 #endif
 
+#define Board_CRYPTO0 0
 
 /*
  *  ======== ADC ========
