@@ -12,8 +12,15 @@
 #include <ti/drivers/PIN.h>
 #include <ti/drivers/dpl/HwiP.h>
 
-#include "Board.h"
+
 #include "board_control.h"
 
+void Board_Gpio_initialize()
+{
+    return; //already done in board_init...
+}
 
-void Board_Gpio_initialize();
+void Board_Key_initialize()
+{
+    return; //already done in board_init...
+}

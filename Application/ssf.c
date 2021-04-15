@@ -64,15 +64,15 @@
 #include <ioc.h>
 #include <driverlib/aon_batmon.h>
 
+
 #include "Board.h"
 #include "util_timer.h"
 #include "mac_util.h"
-#include "board_key.h"
 
-#include "board_led.h"
-#if defined(DeviceFamily_CC13X0) || defined(DeviceFamily_CC13X2)
-#include "board_gpio.h"
-#endif
+
+#include "board_control_led.h"
+
+#include "board_control.h"
 
 #include "macconfig.h"
 
@@ -288,13 +288,6 @@ static int findUnuedBlackListIndex(void);
 static uint16_t getNumBlackListEntries(void);
 static void saveNumBlackListEntries(uint16_t numEntries);
 
-#ifdef FEATURE_UBLE
-static void bleAdv_eventProxyCB(void);
-static void bleAdv_updateTlmCB(uint16_t *pVbatt, uint16_t *pTemp, uint32_t *pTime100MiliSec);
-static void bleAdv_updateMsButtonCB(uint8_t *pButton);
-static void bleAdv_advStatsCB(BleAdv_Stats advStats);
-static void bleAdv_advertiserTypeChange(BleAdv_AdertiserType newType);
-#endif
 
 /******************************************************************************
  Public Functions
@@ -311,9 +304,6 @@ void Ssf_init(void *sem)
     OADClient_Params_t OADClientParams;
 #endif //FEATURE_NATIVE_OAD
 
-#ifdef FEATURE_UBLE
-    BleAdv_Params_t bleAdv_Params;
-#endif
 
 #ifdef NV_RESTORE
     /* Save off the NV Function Pointers */
@@ -327,12 +317,6 @@ void Ssf_init(void *sem)
     ApiMac_mlmeSetReqUint8(ApiMac_attribute_rangeExtender,
                            (uint8_t)CONFIG_RANGE_EXT_MODE);
 
-    /* Initialize keys */
-    if(Board_Key_initialize(processKeyChangeCallback) == KEY_RIGHT)
-    {
-        /* Right key is pressed on power up, clear all NV */
-        Ssf_clearAllNVItems();
-    }
 
 #ifndef POWER_MEAS
     /* Initialize the LEDs */
@@ -385,22 +369,7 @@ void Ssf_init(void *sem)
     OADClient_open(&OADClientParams);
 #endif //FEATURE_NATIVE_OAD
 
-#ifdef FEATURE_UBLE
-    /* Initialise previous Tick count used to calculate uptime for the TLM beacon */
-    prevTicks = Clock_getTicks();
 
-    /* Initialize the Simple Beacon module wit default params */
-    BleAdv_Params_init(&bleAdv_Params);
-    bleAdv_Params.pfnPostEvtProxyCB = bleAdv_eventProxyCB;
-    bleAdv_Params.pfnUpdateTlmCB = bleAdv_updateTlmCB;
-    bleAdv_Params.pfnUpdateMsButtonCB = bleAdv_updateMsButtonCB;
-    bleAdv_Params.pfnAdvStatsCB = bleAdv_advStatsCB;
-    bleAdv_Params.pfnAdvTypeChangeCB = bleAdv_advertiserTypeChange;
-    BleAdv_init(&bleAdv_Params);
-
-    /* initialize BLE advertisements to default to MS */
-    BleAdv_setAdvertiserType(advertisementType);
-#endif
 
 #ifndef POWER_MEAS
 #ifdef OAD_ONCHIP
@@ -412,9 +381,7 @@ void Ssf_init(void *sem)
 #else /* !OAD_ONCHIP */
     LCD_WRITE_STRING("TI Sensor", 1);
 #endif
-#if !defined(AUTO_START)
-    LCD_WRITE_STRING("Waiting...", 2);
-#endif /* AUTO_START */
+
 #endif /* !POWER_MEAS */
 }
 
@@ -426,96 +393,23 @@ void Ssf_init(void *sem)
  */
 void Ssf_processEvents(void)
 {
-    /* Did a key press occur? */
-    if(events & KEY_EVENT)
-    {
+
+
         /* Left key press is a PAN disassociation request, if the device has started. */
-        if((keys & KEY_LEFT) && (started == true))
-        {
-#ifdef FEATURE_UBLE
-            if (advertisementType != BleAdv_AdertiserMs)
-            {
-                /* Send disassociation request */
-                Jdllc_sendDisassociationRequest();
-            }
-#else
-            /* Send disassociation request */
-            Jdllc_sendDisassociationRequest();
-#endif /* FEATURE_UBLE */
+        /* Send disassociation request */
+       //     Jdllc_sendDisassociationRequest();
 
-        }
 
-        else if(keys & KEY_RIGHT)
-        {
 
-            if(started == false)
-            {
-#ifndef POWER_MEAS
-                LCD_WRITE_STRING("Starting...", 2);
-#endif
+     //       if(started == false)
+
 
                 /* Tell the sensor to start */
-                Util_setEvent(&Sensor_events, SENSOR_START_EVT);
+       //         Util_setEvent(&Sensor_events, SENSOR_START_EVT);
                 /* Wake up the application thread when it waits for clock event */
-                Semaphore_post(sensorSem);
-            }
-            else
-            {
-#ifdef IDENTIFY_LED
-                Sensor_sendIdentifyLedRequest();
-#endif
-#ifdef FEATURE_UBLE
-                BleAdv_AdertiserType curType = BleAdv_getAdvertiserType();
-                /* If curType is Url, then we cycle through the urls we have */
-                if (curType == BleAdv_AdertiserUrl)
-                {
-                    /* If we are currently advertising our last url,
-                     *  then cycle back to the first url and switch to the next AdvertiserType
-                     */
-                    if (eddystoneUrlIdx < NUM_EDDYSTONE_URLS)
-                    {
-                        BleAdv_updateUrl(urls[eddystoneUrlIdx]);
-#ifndef POWER_MEAS
-                        LCD_WRITE_STRING_VALUE("Updating Url number ", eddystoneUrlIdx, 10, 5);
-#endif /* !POWER_MEAS */
-                        eddystoneUrlIdx++;
-                    }
-                    /*
-                     * We have reached the end of our url list, start back at the front and choose the
-                     *  next advertiser Type.
-                     */
-                    else
-                    {
-                        eddystoneUrlIdx = 0;
-                        curType = (BleAdv_AdertiserType)((curType + 1) % BleAdv_AdertiserTypeEnd);
-                    }
-                }
-                /*
-                 * choose the next Advertiser Type
-                 */
-                else
-                {
-                    curType = (BleAdv_AdertiserType)((curType + 1) % BleAdv_AdertiserTypeEnd);
-                }
+         //       Semaphore_post(sensorSem);
+           //Sensor_sendIdentifyLedRequest();
 
-                /*
-                 * Only update the Advertiser Type if it has been changed above.
-                 */
-                if (curType != advertisementType)
-                {
-                    BleAdv_setAdvertiserType(curType);
-                    advertisementType = curType;
-                }
-#endif /* FEATURE_UBLE */
-            }
-        }
-
-        /* Clear the key press indication */
-        keys = 0;
-
-        /* Clear the event */
-        Util_clearEvent(&events, KEY_EVENT);
-    }
 
 #ifdef FEATURE_NATIVE_OAD
     /* Did a OAD event occur? */
@@ -525,25 +419,6 @@ void Ssf_processEvents(void)
     }
 #endif //FEATURE_NATIVE_OAD
 
-#ifdef FEATURE_UBLE
-    if (events & NODE_EVENT_UBLE)
-    {
-        uble_processMsg();
-
-        /* Clear the event */
-        Util_clearEvent(&events, NODE_EVENT_UBLE);
-    }
-
-    if(events & NODE_EVENT_UBLE_STATS)
-    {
-#ifndef POWER_MEAS
-        LCD_WRITE_STRING_VALUE("Adv Success Count: ", bleAdvStats.successCnt, 10, 5);
-        LCD_WRITE_STRING_VALUE("Adv Fail Count: ", bleAdvStats.failCnt, 10, 6);
-#endif //POWER_MEAS
-        /* Clear the event */
-        Util_clearEvent(&events, NODE_EVENT_UBLE_STATS);
-    }
-#endif
 }
 
 /*!
@@ -911,12 +786,6 @@ void Ssf_configurationUpdate(Smsgs_configRspMsg_t *pRsp)
         /* Write the NV item */
         pNV->writeItem(id, sizeof(Ssf_configSettings_t), &configInfo);
     }
-
-#if !defined(DeviceFamily_CC13X0) && !defined(DeviceFamily_CC26XX) && !defined(DeviceFamily_CC26X2) && !defined(DeviceFamily_CC13X2)
-#ifndef POWER_MEAS
-    Board_Led_toggle(board_led_type_LED4);
-#endif
-#endif
 }
 
 /*!
@@ -1946,124 +1815,4 @@ void Ssf_displayPerStats(Smsgs_msgStatsField_t* pstats)
 #endif
 }
 #endif /* DISPLAY_PER_STATS */
-
-#ifdef FEATURE_UBLE
-/*********************************************************************
-* @fn      bleAdv_eventProxyCB
-*
-* @brief   Post an event to the application so that a Micro BLE Stack internal
-*          event is processed by Micro BLE Stack later in the application
-*          task's context.
-*
-* @param   None
-*
-* @return  None
-*/
-static void bleAdv_eventProxyCB(void)
-{
-    /* Post event */
-    Util_setEvent(&events, NODE_EVENT_UBLE);
-    Semaphore_post(sensorSem);
-}
-
-/*********************************************************************
-* @fn      bleAdv_updateTlmCB
-
-* @brief Callback to update the TLM data
-*
-* @param pvBatt Battery level
-* @param pTemp Current temperature
-* @param pTime100MiliSec time since boot in 100ms units
-*
-* @return  None
-*/
-static void bleAdv_updateTlmCB(uint16_t *pvBatt, uint16_t *pTemp, uint32_t *pTime100MiliSec)
-{
-    uint32_t currentTicks = Clock_getTicks();
-
-    //check for wrap around
-    if (currentTicks > prevTicks)
-    {
-        //calculate time since last reading in 0.1s units
-        *pTime100MiliSec += ((currentTicks - prevTicks) * Clock_tickPeriod) / 100000;
-    }
-    else
-    {
-        //calculate time since last reading in 0.1s units
-        *pTime100MiliSec += ((prevTicks - currentTicks) * Clock_tickPeriod) / 100000;
-    }
-    prevTicks = currentTicks;
-
-    *pvBatt = AONBatMonBatteryVoltageGet();
-    // Battery voltage (bit 10:8 - integer, but 7:0 fraction)
-    *pvBatt = (*pvBatt * 125) >> 5; // convert V to mV
-
-    //Add temperature value if temperature sensor is available
-    //constant value shown as example
-    *pTemp = 0x0000;
-}
-
-/*********************************************************************
-* @fn      bleAdv_updateMsButtonCB
-*
-* @brief Callback to update the MS button data
-*
-* @param pButton Button state to be added to MS beacon Frame
-*
-* @return  None
-*/
-static void bleAdv_updateMsButtonCB(uint8_t *pButton)
-{
-    /* Necessary for now because the `keys` value is cleared before we read it here */
-    *pButton = !PIN_getInputValue(Board_PIN_BUTTON0);
-}
-
-
-void bleAdv_advStatsCB(BleAdv_Stats advStats)
-{
-#ifndef POWER_MEAS
-    /* There is no point in updating these values if we haven't started sending them out. */
-    if (started)
-    {
-        memcpy(&bleAdvStats, &advStats, sizeof(BleAdv_Stats));
-
-        /* Post event */
-        Util_setEvent(&events, NODE_EVENT_UBLE_STATS);
-        Semaphore_post(sensorSem);
-    }
-#endif
-}
-
-
-/**
- *  @brief Callback to be called when the advertiserTypeChange() occurs.
- *
- *  @param newType the new BleAdv_AdertiserType
- */
-void bleAdv_advertiserTypeChange(BleAdv_AdertiserType newType)
-{
-#ifndef POWER_MEAS
-    switch(newType)
-    {
-    case BleAdv_AdertiserNone:
-        LCD_WRITE_STRING("Advertiser Type Changed: AdvertiserNone", 4);
-        break;
-
-    case BleAdv_AdertiserMs:
-        LCD_WRITE_STRING("Advertiser Type Changed: AdvertiserMs", 4);
-        break;
-
-    case BleAdv_AdertiserUrl:
-        LCD_WRITE_STRING("Advertiser Type Changed: AdvertiserUrl", 4);
-        break;
-
-    case BleAdv_AdertiserUid:
-        LCD_WRITE_STRING("Advertiser Type Changed: AdvertiserUid", 4);
-        break;
-    default:
-        LCD_WRITE_STRING_VALUE("Advertiser Type Changed: ", newType, 10, 4);
-    }
-#endif /* POWER_MEAS */
-}
-#endif
 

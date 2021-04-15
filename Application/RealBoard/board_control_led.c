@@ -8,12 +8,34 @@
 
 #include <xdc/std.h>
 
-#include <ti/drivers/PIN.h>
+
 #include <ti/drivers/dpl/HwiP.h>
 
-#include "Board.h"
-#include "util_timer.h"
+
 #include "board_control_led.h"
+
+static void board_led_blinkTimeoutCB(UArg a0);
+static bool board_led_anyBlinking(void);
+static void board_led_blinkLed(void);
+static unsigned int board_led_convertLedType(board_led_type led);
+static uint32_t board_led_convertLedValue(board_led_state state);
+static bool board_led_anyBlinking(void);
+static bool board_led_anyBlinking(void)
+{
+    uint8_t x;
+
+    for(x = 0; x < NO_OF_LEDS; x++)
+    {
+        if((ledStatus[x].state == board_led_state_BLINKING) ||
+                        ((ledStatus[x].state == board_led_state_BLINK)
+                        && (ledStatus[x].status != BLINKING_STATUS_DONE)))
+        {
+            return (true);
+        }
+    }
+
+    return (false);
+}
 
 void Board_Led_control(board_led_type led, board_led_state state)
 {
@@ -107,3 +129,84 @@ void Board_Led_initialize(void)
 }
 
 
+static void board_led_blinkLed(void)
+{
+    uint8_t x;
+    uint32_t key;
+
+    for(x = 0; x < NO_OF_LEDS; x++)
+    {
+        unsigned int index;
+        uint32_t value;
+
+        if(ledStatus[x].state == board_led_state_BLINKING)
+        {
+            index = board_led_convertLedType((board_led_type) x);
+
+            if(ledStatus[x].status == BLINKING_STATUS_OFF)
+            {
+                value = board_led_convertLedValue(board_led_state_ON);
+                ledStatus[x].status = BLINKING_STATUS_ON;
+            }
+            else
+            {
+                value = board_led_convertLedValue(board_led_state_OFF);
+                ledStatus[x].status = BLINKING_STATUS_OFF;
+            }
+
+            /* Enter critical section so this function is thread safe*/
+            key = HwiP_disable();
+
+            PIN_setOutputValue(ledPinHandle, index, value);
+
+            /* Exit critical section */
+            HwiP_restore(key);
+        }
+        else if((ledStatus[x].state == board_led_state_BLINK) && (ledStatus[x]
+                        .status
+                                                                  != BLINKING_STATUS_DONE))
+        {
+            index = board_led_convertLedType((board_led_type) x);
+            value = board_led_convertLedValue(board_led_state_OFF);
+            ledStatus[x].status = BLINKING_STATUS_DONE;
+
+            /* Enter critical section so this function is thread safe*/
+            key = HwiP_disable();
+
+            PIN_setOutputValue(ledPinHandle, index, value);
+
+            /* Exit critical section */
+            HwiP_restore(key);
+        }
+    }
+}
+
+
+static unsigned int board_led_convertLedType(board_led_type led)
+{
+    if (led == board_led_type_LED1)
+    {
+        return(Board_PIN6);
+    }
+    return(Board_PIN8);
+}
+
+static uint32_t board_led_convertLedValue(board_led_state state)
+{
+    uint32_t value;
+
+    switch(state)
+    {
+        case board_led_state_ON:
+        case board_led_state_BLINK:
+        case board_led_state_BLINKING:
+            value = Board_GPIO_LED_ON;
+            break;
+
+        default:
+            value = Board_GPIO_LED_OFF;
+            break;
+    }
+
+    return (value);
+}

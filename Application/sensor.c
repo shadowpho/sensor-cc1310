@@ -56,7 +56,8 @@
 #include "smsgs.h"
 #include "sensor.h"
 #include "config.h"
-#include "board_led.h"
+#include "board_control_led.h"
+#include "board_control.h"
 
 #ifdef FEATURE_NATIVE_OAD
 #include "oad_client.h"
@@ -474,7 +475,8 @@ void Sensor_process(void)
                                       &parentInfo.devInfo.extAddress, 0);
             if(stat != ApiMac_status_success)
             {
-                LCD_WRITE_STRING("Auth Error", 6);
+                //LCD_WRITE_STRING("Auth Error", 6);
+                //XXX
                 Ssf_displayError("Auth Error: 0x", (uint8_t)stat);
             }
 #endif /* FEATURE_MAC_SECURITY */

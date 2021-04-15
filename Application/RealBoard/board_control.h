@@ -18,7 +18,7 @@ extern "C"
 void Board_Gpio_initialize();
 void Board_Key_initialize();
 
-void Board_Gpio_initialize();
+
 
 
 
