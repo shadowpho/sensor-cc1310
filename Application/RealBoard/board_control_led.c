@@ -10,6 +10,11 @@
 
 
 #include <ti/drivers/dpl/HwiP.h>
+#include <string.h>
+#include <xdc/runtime/System.h>
+
+#define MAX_LCD_BUF 40
+static uint8_t lcdBuf[MAX_LCD_BUF];
 
 
 #include "board_control_led.h"
@@ -209,4 +214,47 @@ static uint32_t board_led_convertLedValue(board_led_state state)
     }
 
     return (value);
+}
+
+void Board_Led_toggle(board_led_type led)
+{
+    board_led_state newState = board_led_state_OFF;
+
+    /* Look for invalid parameter */
+    if(led < NO_OF_LEDS)
+    {
+        if( (ledStatus[led].state != board_led_state_BLINK) &&
+            (ledStatus[led].state != board_led_state_BLINKING) )
+        {
+            /* Toggle state */
+            if(ledStatus[led].state == board_led_state_OFF)
+            {
+                newState = board_led_state_ON;
+            }
+
+            /* Set new state */
+            Board_Led_control(led, newState);
+        }
+    }
+}
+
+
+void Board_Lcd_writeString(char *str, uint8_t line)
+{
+    System_printf(str);
+    System_printf("\r\n");
+}
+
+extern void Util_itoa(uint16_t num, uint8_t *buf, uint8_t radix);
+void Board_Lcd_writeStringValue(char *str, uint16_t value, uint8_t format,
+                                uint8_t line)
+{
+    int len = strlen(str);
+    memset(lcdBuf, 0, MAX_LCD_BUF);
+    memcpy(lcdBuf, str, len);
+    Util_itoa(value, &lcdBuf[len], format);
+
+
+    System_printf((xdc_CString)lcdBuf);
+    System_printf("\r\n");
 }

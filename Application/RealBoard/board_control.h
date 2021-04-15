@@ -19,7 +19,12 @@ void Board_Gpio_initialize();
 void Board_Key_initialize();
 
 
+#include <ti/drivers/crypto/CryptoCC26XX.h>
 
+
+extern CryptoCC26XX_Object cryptoCC26XXObjects[1];
+extern const CryptoCC26XX_HWAttrs cryptoCC26XXHWAttrs[1];
+extern const CryptoCC26XX_Config CryptoCC26XX_config[1];
 
 
 #ifdef __cplusplus
