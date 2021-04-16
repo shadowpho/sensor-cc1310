@@ -47,5 +47,10 @@
  *        remain unmodified.
  */
 
+#define SET_CCFG_MODE_CONF_VDDR_CAP 0x74
+//#define SET_CCFG_MODE_CONF_XOSC_CAP_MOD 0x0
+//#define SET_CCFG_MODE_CONF_XOSC_CAPARRAY_DELTA  0x3F
+
+
 #include <ti/devices/DeviceFamily.h>
 #include DeviceFamily_constructPath(startup_files/ccfg.c)

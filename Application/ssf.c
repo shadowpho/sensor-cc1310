@@ -318,16 +318,6 @@ void Ssf_init(void *sem)
                            (uint8_t)CONFIG_RANGE_EXT_MODE);
 
 
-#ifndef POWER_MEAS
-    /* Initialize the LEDs */
-    Board_Led_initialize();
-#endif /* POWER_MEAS */
-
-    /* Initialize the GPIOs for RF setting */
-#if defined(DeviceFamily_CC13X0) || defined(DeviceFamily_CC13X2)
-    Board_Gpio_initialize();
-#endif
-
     if((pNV != NULL) && (pNV->readItem != NULL))
     {
         /* Attempt to retrieve reason for the reset */

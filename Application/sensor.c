@@ -63,11 +63,8 @@
 #include "oad_client.h"
 #endif /* FEATURE_NATIVE_OAD */
 
-#ifdef OSAL_PORT2TIRTOS
+
 #include <ti/sysbios/knl/Clock.h>
-#else
-#include "icall.h"
-#endif
 
 #ifdef FEATURE_SECURE_COMMISSIONING
 #include "sm_ti154.h"
@@ -323,11 +320,8 @@ STATIC SM_callbacks_t SMCallbacks =
 
  Public function defined in sensor.h
  */
-#ifdef OSAL_PORT2TIRTOS
+
 void Sensor_init(uint8_t macTaskId)
-#else
-void Sensor_init(void)
-#endif
 {
     uint32_t frameCounter = 0;
 

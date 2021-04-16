@@ -284,18 +284,6 @@ void Main_assertHandler(uint8_t assertReason)
  */
 Void appTaskFxn(UArg a0, UArg a1)
 {
-#ifdef TIMAC_AGAMA_FPGA
-    /* FPGA build disables POWER constraints */
-    Power_setConstraint(PowerCC26XX_IDLE_PD_DISALLOW);
-    Power_setConstraint(PowerCC26XX_SB_DISALLOW);
-
-    IOCPortConfigureSet(IOID_20, IOC_PORT_RFC_GPO0, IOC_STD_OUTPUT);
-    IOCPortConfigureSet(IOID_18, IOC_PORT_RFC_GPI0, IOC_STD_INPUT);
-    // configure RF Core SMI Command Link
-    IOCPortConfigureSet(IOID_22, IOC_IOCFG0_PORT_ID_RFC_SMI_CL_OUT, IOC_STD_OUTPUT);
-    IOCPortConfigureSet(IOID_21, IOC_IOCFG0_PORT_ID_RFC_SMI_CL_IN, IOC_STD_INPUT);
-
-#endif
 
 #ifndef OSAL_PORT2TIRTOS
     /* Initialize ICall module */
@@ -330,29 +318,8 @@ Void appTaskFxn(UArg a0, UArg a1)
 #endif
 
     /* Initialize the application */
-#ifdef OSAL_PORT2TIRTOS
+
     Sensor_init(_macTaskId);
-#else
-    ICall_createRemoteTasks();
-
-    /* Initialize the application */
-    Sensor_init();
-#endif
-
-#ifdef FEATURE_BLE_OAD
-    uint8_t blinkCnt = 8;
-
-    /* blink to let user know sensor is initializing */
-    while(blinkCnt)
-    {
-        Board_Led_toggle(board_led_type_LED1);
-        Task_sleep(10000);
-        blinkCnt--;
-    }
-
-    /* reset led back to known state */
-    Board_Led_control(board_led_type_LED1, board_led_state_OFF);
-#endif /* FEATURE_BLE_OAD */
 
     /* Kick off application - Forever loop */
     while(1)
@@ -404,41 +371,20 @@ int main(void)
     macUser0Cfg[0].pAssertFP = macHalAssertHandler;
 #endif
 
-#if ((CONFIG_RANGE_EXT_MODE == APIMAC_HIGH_GAIN_MODE) && \
-     defined(DeviceFamily_CC13X0) && !defined(FREQ_2_4G))
-    macUser0Cfg[0].pSetRE = Board_Palna_initialize;
-#endif
+
     /*
      Initialization for board related stuff such as LEDs
      following TI-RTOS convention
      */
     PIN_init(BoardGpioInitTable);
 
-#ifdef FEATURE_BLE_OAD
-    /* If FEATURE_BLE_OAD is enabled, look for a left button
-     *  press on reset. This indicates to revert to some
-     *  factory image
-     */
-    if(!PIN_getInputValue(Board_PIN_BUTTON0))
-    {
-        OAD_markSwitch();
-    }
-#endif /* FEATURE_BLE_OAD */
 
-
-#ifndef POWER_MEAS
-#if defined(BOARD_DISPLAY_USE_UART)
-    /* Enable System_printf(..) UART output */
     UART_init();
     UART_Params_init(&uartParams);
-#ifndef TIMAC_AGAMA_FPGA
     uartParams.baudRate = 115200;
-#else
-    uartParams.baudRate = 460800;
-#endif
-    UartPrintf_init(UART_open(Board_UART0, &uartParams));
-#endif /* BOARD_DISPLAY_USE_UART */
-#endif
+    UART_Handle debug_uart = UART_open(Board_UART0, &uartParams);
+    UartPrintf_init(debug_uart);
+    UART_control(debug_uart,UART_CMD_RXDISABLE)
 
 #ifdef OSAL_PORT2TIRTOS
     _macTaskId = macTaskInit(macUser0Cfg);
