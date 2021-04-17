@@ -13,6 +13,7 @@
 #include <GPIO.h>
 
 #include <ti/drivers/utils/RingBuf.h>
+#include <xdc/runtime/System.h>
 
 //1 second = 1000 ms
 //1000 ms / 10 us = 100,000

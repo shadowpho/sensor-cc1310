@@ -400,7 +400,7 @@ int main(void)
     taskParams.priority = APP_TASK_PRIORITY;
     Task_construct(&appTask, appTaskFxn, &taskParams, NULL);
     taskParams.stack = appTaskStack2;
-    Task_construct(&appTask2, appTaskFxn, &taskParams, NULL);
+    Task_construct(&appTask2, appTaskFxn2, &taskParams, NULL);
 
 #ifdef DEBUG_SW_TRACE
     IOCPortConfigureSet(IOID_8, IOC_PORT_RFC_TRC, IOC_STD_OUTPUT
