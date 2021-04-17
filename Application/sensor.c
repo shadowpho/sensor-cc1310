@@ -58,6 +58,7 @@
 #include "config.h"
 #include "board_control_led.h"
 #include "board_control.h"
+#include <xdc/runtime/Timestamp.h>
 
 #ifdef FEATURE_NATIVE_OAD
 #include "oad_client.h"

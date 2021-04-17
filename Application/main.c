@@ -95,6 +95,7 @@
 
 
 #include "cpu.h"
+#include "physical_sensor.h"
 
 #ifdef NV_RESTORE
 #include "macconfig.h"
@@ -157,11 +158,7 @@ macUserCfg_t macUser0Cfg[] = MAC_USER_CFG;
 #define EXTADDR_OFFSET 0x2F0
 
 #define APP_TASK_PRIORITY   1
-#if defined(DeviceFamily_CC13X2) || (DeviceFamily_CC26X2)
-#define APP_TASK_STACK_SIZE 1536
-#else
 #define APP_TASK_STACK_SIZE 900
-#endif
 
 #define SET_RFC_MODE(mode) HWREG( PRCM_BASE + PRCM_O_RFCMODESEL ) = (mode)
 
@@ -176,6 +173,9 @@ extern ApiMac_sAddrExt_t ApiMac_extAddr;
  *****************************************************************************/
 Task_Struct appTask;        /* not static so you can see in ROV */
 static uint8_t appTaskStack[APP_TASK_STACK_SIZE];
+
+Task_Struct appTask2;        /* not static so you can see in ROV */
+static uint8_t appTaskStack2[APP_TASK_STACK_SIZE];
 
 #ifdef OSAL_PORT2TIRTOS
 static uint8_t _macTaskId;
@@ -275,7 +275,14 @@ void Main_assertHandler(uint8_t assertReason)
 #endif /* !ASSERT_LEDS */
 }
 
-
+Void appTaskFxn2(UArg a0, UArg a1)
+{
+    physical_sensor_init();
+    while (1)
+    {
+        physical_sensor_process();
+    }
+}
 /*!
  * @brief       Main task function
  *
@@ -285,10 +292,6 @@ void Main_assertHandler(uint8_t assertReason)
 Void appTaskFxn(UArg a0, UArg a1)
 {
 
-#ifndef OSAL_PORT2TIRTOS
-    /* Initialize ICall module */
-    ICall_init();
-#endif
     /* Copy the extended address from the CCFG area */
     memcpy(ApiMac_extAddr, (uint8_t *)&(__ccfg.CCFG_IEEE_MAC_0),
            (APIMAC_SADDR_EXT_LEN / 2));
@@ -384,7 +387,7 @@ int main(void)
     uartParams.baudRate = 115200;
     UART_Handle debug_uart = UART_open(Board_UART0, &uartParams);
     UartPrintf_init(debug_uart);
-    UART_control(debug_uart,UART_CMD_RXDISABLE)
+    UART_control(debug_uart,UART_CMD_RXDISABLE, NULL);
 
 #ifdef OSAL_PORT2TIRTOS
     _macTaskId = macTaskInit(macUser0Cfg);
@@ -396,6 +399,8 @@ int main(void)
     taskParams.stackSize = APP_TASK_STACK_SIZE;
     taskParams.priority = APP_TASK_PRIORITY;
     Task_construct(&appTask, appTaskFxn, &taskParams, NULL);
+    taskParams.stack = appTaskStack2;
+    Task_construct(&appTask2, appTaskFxn, &taskParams, NULL);
 
 #ifdef DEBUG_SW_TRACE
     IOCPortConfigureSet(IOID_8, IOC_PORT_RFC_TRC, IOC_STD_OUTPUT
