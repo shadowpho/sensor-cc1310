@@ -49,6 +49,8 @@ void physical_sensor_init(void)
 }
 void physical_sensor_process(void)
 {
+
+
     I2C_Transaction i2cTransaction;
     char r_buff[8];
     char w_buff[8];
@@ -71,11 +73,13 @@ void physical_sensor_process(void)
     i2cTransaction.writeCount = 1;
     i2cTransaction.slaveAddress = HP203B;
     w_buff[0]=0x4C;
+    status = I2C_transfer(i2c_handle, &i2cTransaction);
 
     Task_sleep(1700);
     //read both
     w_buff[0]=0x10;
     i2cTransaction.readCount = 6;
+    i2cTransaction.slaveAddress = SHTC3;
     status = I2C_transfer(i2c_handle, &i2cTransaction);
     //assert?
     //XXX-add to ring buffer
@@ -84,6 +88,7 @@ void physical_sensor_process(void)
     System_printf("%i,%i,%i,%i,%i,%i,%i \r\n",timestamp,r_buff[0],r_buff[1],r_buff[2],r_buff[3],r_buff[4],r_buff[5]);
 
     i2cTransaction.writeCount = 0;
+    i2cTransaction.slaveAddress = HP203B;
     status = I2C_transfer(i2c_handle, &i2cTransaction);
     //assert?
     //XXX-add to ring buffer

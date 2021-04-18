@@ -270,9 +270,9 @@ const PIN_Config BoardGpioInitTable[] = {
     /* Parent Signal: Board_I2C SCL, (DIO5) */
     Board_PIN4 | PIN_INPUT_EN | PIN_PULLDOWN | PIN_IRQ_DIS,
     /* Parent Signal: Board_TIMER2 PWM Pin, (DIO9) */
-    Board_PIN6 | PIN_INPUT_EN | PIN_PULLDOWN | PIN_IRQ_DIS,
+    Board_PIN6 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_DIS,
     /* Parent Signal: Board_TIMER3 PWM Pin, (DIO10) */
-    Board_PIN8 | PIN_INPUT_EN | PIN_PULLDOWN | PIN_IRQ_DIS,
+    Board_PIN8 | PIN_INPUT_EN | PIN_PULLUP | PIN_IRQ_DIS,
     /* Parent Signal: Board_UART0 TX, (DIO1) */
     Board_PIN0 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_HIGH | PIN_PUSHPULL | PIN_DRVSTR_MED,
 
