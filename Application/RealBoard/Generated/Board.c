@@ -264,7 +264,7 @@ const PIN_Config BoardGpioInitTable[] = {
     /* Parent Signal: Interrupt GPIO Pin, (DIO0) */
     Board_PIN5 | PIN_INPUT_EN | PIN_PULLDOWN | PIN_IRQ_DIS,
     /* Parent Signal: Sensor_Power GPIO Pin, (DIO3) */
-    Board_PIN7 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MED,
+    Board_PIN7 | PIN_GPIO_OUTPUT_EN | PIN_GPIO_LOW | PIN_PUSHPULL | PIN_DRVSTR_MAX,
     /* Parent Signal: Board_I2C SDA, (DIO6) */
     Board_PIN3 | PIN_INPUT_EN | PIN_PULLDOWN | PIN_IRQ_DIS,
     /* Parent Signal: Board_I2C SCL, (DIO5) */

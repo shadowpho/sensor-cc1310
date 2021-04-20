@@ -58,7 +58,9 @@ void physical_sensor_process(void)
     i2cTransaction.writeBuf=w_buff;
 
     GPIO_write(Sensor_Power,1); //enable power
+    Task_sleep(100); //1 ms TBD
     i2c_handle = I2C_open(Board_I2C, NULL);
+    Task_sleep(300); //3 ms TBD
     Task_sleep(25); //250 uS
     //talk to
     i2cTransaction.slaveAddress = SHTC3;
@@ -76,8 +78,7 @@ void physical_sensor_process(void)
     status = I2C_transfer(i2c_handle, &i2cTransaction);
 
     Task_sleep(1700);
-    //read both
-    w_buff[0]=0x10;
+    i2cTransaction.writeCount = 0;
     i2cTransaction.readCount = 6;
     i2cTransaction.slaveAddress = SHTC3;
     status = I2C_transfer(i2c_handle, &i2cTransaction);
@@ -87,17 +88,14 @@ void physical_sensor_process(void)
 
     System_printf("%i,%i,%i,%i,%i,%i,%i \r\n",timestamp,r_buff[0],r_buff[1],r_buff[2],r_buff[3],r_buff[4],r_buff[5]);
 
-    i2cTransaction.writeCount = 0;
+    //read both
+    w_buff[0]=0x10;
+    i2cTransaction.writeCount = 1;
     i2cTransaction.slaveAddress = HP203B;
     status = I2C_transfer(i2c_handle, &i2cTransaction);
     //assert?
     //XXX-add to ring buffer
     System_printf("%i,%i,%i,%i,%i,%i,%i \r\n",timestamp,r_buff[0],r_buff[1],r_buff[2],r_buff[3],r_buff[4],r_buff[5]);
-
-
-
-
-
 
     I2C_close(i2c_handle); //close I2C so we can SLEEP!
     GPIO_write(Sensor_Power,0); //disable power
