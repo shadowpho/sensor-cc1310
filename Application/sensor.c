@@ -67,6 +67,9 @@
 
 #include <ti/sysbios/knl/Clock.h>
 
+#include <xdc/runtime/System.h>
+#include "physical_sensor.h"
+
 #ifdef FEATURE_SECURE_COMMISSIONING
 #include "sm_ti154.h"
 #endif
@@ -168,26 +171,7 @@ STATIC uint8_t deviceTxMsduHandle = 0;
 STATIC Smsgs_configReqMsg_t configSettings;
 
 #if !defined(OAD_IMG_A)
-/*!
- Temp Sensor field - valid only if Smsgs_dataFields_tempSensor
- is set in frameControl.
- */
-STATIC Smsgs_tempSensorField_t tempSensor =
-    { 0 };
 
-/*!
- Light Sensor field - valid only if Smsgs_dataFields_lightSensor
- is set in frameControl.
- */
-STATIC Smsgs_lightSensorField_t lightSensor =
-    { 0 };
-
-/*!
- Humidity Sensor field - valid only if Smsgs_dataFields_humiditySensor
- is set in frameControl.
- */
-STATIC Smsgs_humiditySensorField_t humiditySensor =
-    { 0 };
 #endif //OAD_IMG_A
 
 STATIC Llc_netInfo_t parentInfo = {0};
@@ -216,8 +200,8 @@ static uint8_t getMsduHandle(Smsgs_cmdIds_t msgType);
 #if !defined(OAD_IMG_A)
 static void processSensorMsgEvt(void);
 static bool sendSensorMessage(ApiMac_sAddr_t *pDstAddr,
-                              Smsgs_sensorMsg_t *pMsg);
-static void readSensors(void);
+                              Smsgs_sensorMsg_t *pMsg, enum DataT type_of_data);
+
 #endif //OAD_IMG_A
 
 #if SENSOR_TEST_RAMP_DATA_SIZE
@@ -328,15 +312,9 @@ void Sensor_init(uint8_t macTaskId)
 
     /* Initialize the sensor's structures */
     memset(&configSettings, 0, sizeof(Smsgs_configReqMsg_t));
-#if defined(TEMP_SENSOR)
-    configSettings.frameControl |= Smsgs_dataFields_tempSensor;
-#endif
-#if defined(LIGHT_SENSOR)
-    configSettings.frameControl |= Smsgs_dataFields_lightSensor;
-#endif
-#if defined(HUMIDITY_SENSOR)
-    configSettings.frameControl |= Smsgs_dataFields_humiditySensor;
-#endif
+
+    configSettings.frameControl |= (Smsgs_dataFields_pressureSensor | Smsgs_dataFields_humiditySensor | Smsgs_dataFields_internalSensor);
+
     configSettings.frameControl |= Smsgs_dataFields_msgStats;
     configSettings.frameControl |= Smsgs_dataFields_configSettings;
 
@@ -425,13 +403,13 @@ void Sensor_process(void)
     /* Start the collector device in the network */
     if(Sensor_events & SENSOR_START_EVT)
     {
-
+        System_printf("starting!");
         ApiMac_deviceDescriptor_t devInfo;
         Llc_netInfo_t parentInfo;
 
         if(Ssf_getNetworkInfo(&devInfo, &parentInfo ) == true)
         {
-
+            System_printf("getnetwork succces");
             Ssf_configSettings_t configInfo;
 #ifdef FEATURE_MAC_SECURITY
             ApiMac_status_t stat;
@@ -440,7 +418,7 @@ void Sensor_process(void)
             /* Do we have config settings? */
             if(Ssf_getConfigInfo(&configInfo) == true)
             {
-
+                System_printf("config succces");
                 /* Save the config information */
                 configSettings.frameControl = configInfo.frameControl;
                 configSettings.reportingInterval = configInfo.reportingInterval;
@@ -473,6 +451,7 @@ void Sensor_process(void)
                 //LCD_WRITE_STRING("Auth Error", 6);
                 //XXX
                 Ssf_displayError("Auth Error: 0x", (uint8_t)stat);
+                System_printf("ssf error above");
             }
 #endif /* FEATURE_MAC_SECURITY */
 
@@ -497,6 +476,7 @@ void Sensor_process(void)
 #endif
             Jdllc_rejoin(&devInfo, &parentInfo);
             rejoining = true;
+            System_printf("rejoining!");
 
         }
         else
@@ -543,7 +523,7 @@ void Sensor_process(void)
         processSensorRampMsgEvt();
 #else
         /* Read sensors */
-        readSensors();
+       //already read!
 
         /* Process Sensor Reading Message Event */
         processSensorMsgEvt();
@@ -637,14 +617,10 @@ bool Sensor_sendMsg(Smsgs_cmdIds_t type, ApiMac_sAddr_t *pDstAddr,
     ApiMac_mcpsDataReq_t dataReq;
 
     /* Timestamp to compute end to end delay */
-#ifdef OSAL_PORT2TIRTOS
     startSensorMsgTimeStamp = Clock_getTicks();
-#else
-    startSensorMsgTimeStamp = ICall_getTicks();
-#endif
+
     /* Fill the data request field */
     memset(&dataReq, 0, sizeof(ApiMac_mcpsDataReq_t));
-
     memcpy(&dataReq.dstAddr, pDstAddr, sizeof(ApiMac_sAddr_t));
 
     if(pDstAddr->addrMode == ApiMac_addrType_extended)
@@ -1103,21 +1079,8 @@ static void processSensorMsgEvt(void)
 
     /* fill in the message */
     sensor.frameControl = configSettings.frameControl;
-    if(sensor.frameControl & Smsgs_dataFields_tempSensor)
-    {
-        memcpy(&sensor.tempSensor, &tempSensor,
-               sizeof(Smsgs_tempSensorField_t));
-    }
-    if(sensor.frameControl & Smsgs_dataFields_lightSensor)
-    {
-        memcpy(&sensor.lightSensor, &lightSensor,
-               sizeof(Smsgs_lightSensorField_t));
-    }
-    if(sensor.frameControl & Smsgs_dataFields_humiditySensor)
-    {
-        memcpy(&sensor.humiditySensor, &humiditySensor,
-               sizeof(Smsgs_humiditySensorField_t));
-    }
+
+
     if(sensor.frameControl & Smsgs_dataFields_msgStats)
     {
         memcpy(&sensor.msgStats, &Sensor_msgStats,
@@ -1133,20 +1096,8 @@ static void processSensorMsgEvt(void)
     /* inform the user interface */
     Ssf_sensorReadingUpdate(&sensor);
 
-    /* send the data to the collector */
-    sendSensorMessage(&collectorAddr, &sensor);
-}
-
-/*!
- * @brief   Manually read the sensors
- */
-static void readSensors(void)
-{
-#if defined(TEMP_SENSOR)
-    /* Read the temp sensor values */
-    tempSensor.ambienceTemp = Ssf_readTempSensor();
-    tempSensor.objectTemp =  tempSensor.ambienceTemp;
-#endif
+    for(int i=0; i<(int)LAST;i++)
+        if(false == sendSensorMessage(&collectorAddr, &sensor,i)) return;
 }
 
 /*!
@@ -1157,25 +1108,30 @@ static void readSensors(void)
  *
  * @return  true if message was sent, false if not
  */
-static bool sendSensorMessage(ApiMac_sAddr_t *pDstAddr, Smsgs_sensorMsg_t *pMsg)
+static bool sendSensorMessage(ApiMac_sAddr_t *pDstAddr, Smsgs_sensorMsg_t *pMsg, enum DataT type_of_data)
 {
     bool ret = false;
     uint8_t *pMsgBuf;
-    uint16_t len = SMSGS_BASIC_SENSOR_LEN;
+    uint16_t len = SMSGS_BASIC_SENSOR_LEN+1; //+1 because I made added another byte
 
     /* Figure out the length */
-    if(pMsg->frameControl & Smsgs_dataFields_tempSensor)
+
+    /*
+    if(pMsg->frameControl & Smsgs_dataFields_pressureSensor)
     {
         len += SMSGS_SENSOR_TEMP_LEN;
     }
-    if(pMsg->frameControl & Smsgs_dataFields_lightSensor)
+    if(pMsg->frameControl & Smsgs_dataFields_humiditySensor)
     {
         len += SMSGS_SENSOR_LIGHT_LEN;
     }
-    if(pMsg->frameControl & Smsgs_dataFields_humiditySensor)
+    if(pMsg->frameControl & Smsgs_dataFields_internalSensor)
     {
         len += SMSGS_SENSOR_HUMIDITY_LEN;
-    }
+    }*/
+    int total_counts = data_count(type_of_data);
+    len += (sizeof_data[type_of_data] * total_counts);
+
     if(pMsg->frameControl & Smsgs_dataFields_msgStats)
     {
         //len += SMSGS_SENSOR_MSG_STATS_LEN;
@@ -1198,21 +1154,18 @@ static bool sendSensorMessage(ApiMac_sAddr_t *pDstAddr, Smsgs_sensorMsg_t *pMsg)
 
         pBuf  = Util_bufferUint16(pBuf,pMsg->frameControl);
 
-        /* Buffer data in order of frameControl mask, starting with LSB */
-        if(pMsg->frameControl & Smsgs_dataFields_tempSensor)
+        //tell collector what data we are sending
+        *pBuf++ = (int)type_of_data;
+
+//now the data!
+
+        for(int i=0;i<total_counts;i++)
         {
-            pBuf = Util_bufferUint16(pBuf, pMsg->tempSensor.ambienceTemp);
-            pBuf = Util_bufferUint16(pBuf, pMsg->tempSensor.objectTemp);
+            OneMeasurment data_temp = pop_data(type_of_data);
+            memcpy(pBuf, (const void*)&data_temp,sizeof_data[type_of_data]);
+            pBuf+=type_of_data;
         }
-        if(pMsg->frameControl & Smsgs_dataFields_lightSensor)
-        {
-            pBuf = Util_bufferUint16(pBuf, pMsg->lightSensor.rawData);
-        }
-        if(pMsg->frameControl & Smsgs_dataFields_humiditySensor)
-        {
-            pBuf = Util_bufferUint16(pBuf, pMsg->humiditySensor.temp);
-            pBuf = Util_bufferUint16(pBuf, pMsg->humiditySensor.humidity);
-        }
+
         if(pMsg->frameControl & Smsgs_dataFields_msgStats)
         {
             pBuf = Util_bufferUint16(pBuf, pMsg->msgStats.joinAttempts);
@@ -1443,24 +1396,8 @@ static uint16_t validateFrameControl(uint16_t frameControl)
 {
     uint16_t newFrameControl = 0;
 
-#if defined(TEMP_SENSOR)
-    if(frameControl & Smsgs_dataFields_tempSensor)
-    {
-        newFrameControl |= Smsgs_dataFields_tempSensor;
-    }
-#endif
-#if defined(LIGHT_SENSOR)
-    if(frameControl & Smsgs_dataFields_lightSensor)
-    {
-        newFrameControl |= Smsgs_dataFields_lightSensor;
-    }
-#endif
-#if defined(HUMIDITY_SENSOR)
-    if(frameControl & Smsgs_dataFields_humiditySensor)
-    {
-        newFrameControl |= Smsgs_dataFields_humiditySensor;
-    }
-#endif
+frameControl |= (Smsgs_dataFields_pressureSensor | Smsgs_dataFields_humiditySensor |Smsgs_dataFields_internalSensor );
+
     if(frameControl & Smsgs_dataFields_msgStats)
     {
         newFrameControl |= Smsgs_dataFields_msgStats;

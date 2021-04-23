@@ -261,17 +261,7 @@ static bool started = false;
 
 static bool led1State = false;
 
-#ifdef FEATURE_UBLE
 
-static BleAdv_AdertiserType advertisementType = BleAdv_AdertiserMs;
-static const char* urls[NUM_EDDYSTONE_URLS] = {"https://www.ti.com/","https://tinyurl.com/z7ofjy7","https://tinyurl.com/jt6j7ya","https://tinyurl.com/h53v6fe","https://www.ti.com/TI154Stack"};
-static uint8_t eddystoneUrlIdx = 0;
-
-static BleAdv_Stats bleAdvStats = {0};
-
-/* previous Tick count used to calculate uptime */
-static uint32_t prevTicks;
-#endif
 
 /******************************************************************************
  Local function prototypes
@@ -826,9 +816,7 @@ void Ssf_trackingUpdate(ApiMac_sAddr_t *pSrcAddr)
  */
 void Ssf_sensorReadingUpdate(Smsgs_sensorMsg_t *pMsg)
 {
-#ifndef POWER_MEAS
-    Board_Led_toggle(board_led_type_LED2);
-#endif
+    System_printf("sent packet!");
 }
 
 /*!

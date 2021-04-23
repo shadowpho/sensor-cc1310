@@ -275,6 +275,12 @@ void Main_assertHandler(uint8_t assertReason)
 #endif /* !ASSERT_LEDS */
 }
 
+/* 32KHz
+#include <driverlib/aon_ioc.h>
+IOCPortConfigureSet(IOIDn, IOC_PORT_AON_CLK32K, IOC_STD_OUTPUT);
+AONIOC32kHzOutputEnable();
+*/
+
 Void appTaskFxn2(UArg a0, UArg a1)
 {
     physical_sensor_init();

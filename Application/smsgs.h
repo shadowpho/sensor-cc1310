@@ -184,12 +184,8 @@ The <b>Sensor Ramp Data Message</b> is defined as:
 
 /*! Length of a sensor data message with no configured data fields */
 #define SMSGS_BASIC_SENSOR_LEN (3 + SMGS_SENSOR_EXTADDR_LEN)
-/*! Length of the tempSensor portion of the sensor data message */
-#define SMSGS_SENSOR_TEMP_LEN 4
-/*! Length of the lightSensor portion of the sensor data message */
-#define SMSGS_SENSOR_LIGHT_LEN 2
-/*! Length of the humiditySensor portion of the sensor data message */
-#define SMSGS_SENSOR_HUMIDITY_LEN 4
+
+
 /*! Length of the messageStatistics portion of the sensor data message */
 #define SMSGS_SENSOR_MSG_STATS_LEN 44
 /*! Length of the configSettings portion of the sensor data message */
@@ -250,12 +246,12 @@ The <b>Sensor Ramp Data Message</b> is defined as:
  */
 typedef enum
 {
-    /*! Temperature Sensor */
-    Smsgs_dataFields_tempSensor = 0x0001,
+
+    Smsgs_dataFields_pressureSensor = 0x0001,
     /*! Light Sensor */
-    Smsgs_dataFields_lightSensor = 0x0002,
+    Smsgs_dataFields_humiditySensor = 0x0002,
     /*! Humidity Sensor */
-    Smsgs_dataFields_humiditySensor = 0x0004,
+    Smsgs_dataFields_internalSensor = 0x0004,
     /*! Message Statistics */
     Smsgs_dataFields_msgStats = 0x0008,
     /*! Config Settings */
@@ -528,26 +524,13 @@ typedef struct _Smsgs_sensormsg_t
     /*! Extended Address */
     uint8_t extAddress[SMGS_SENSOR_EXTADDR_LEN];
     /*! Frame Control field - bit mask of Smsgs_dataFields */
+    //tells us if this is pressure/humidity/internal
     uint16_t frameControl;
-    /*!
-     Temp Sensor field - valid only if Smsgs_dataFields_tempSensor
-     is set in frameControl.
-     */
-    Smsgs_tempSensorField_t tempSensor;
-    /*!
-     Light Sensor field - valid only if Smsgs_dataFields_lightSensor
-     is set in frameControl.
-     */
-    Smsgs_lightSensorField_t lightSensor;
-    /*!
-     Humidity Sensor field - valid only if Smsgs_dataFields_humiditySensor
-     is set in frameControl.
-     */
-    Smsgs_humiditySensorField_t humiditySensor;
-    /*!
-     Message Statistics field - valid only if Smsgs_dataFields_msgStats
-     is set in frameControl.
-     */
+    uint8_t sensor_type;
+    uint16_t count_of_data; //how much data counts are we sending
+    //Actual data is from pop!
+
+
     Smsgs_msgStatsField_t msgStats;
     /*!
      Configuration Settings field - valid only if

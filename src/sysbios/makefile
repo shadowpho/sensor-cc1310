@@ -17,11 +17,11 @@ CCOPTS = --endian=little -mv7M3 --abi=eabi -q -ms --opt_for_speed=0  --program_l
 
 BIOS_INC = -I"C:/ti/simplelink_cc13x0_sdk_4_10_03_10/kernel/tirtos/packages/"
 ANNEX_INCS = 
-INCS = $(BIOS_INC) $(ANNEX_INCS) -I"C:/ti/simplelink_cc13x0_sdk_4_10_03_10/source/" -I"C:/ti/simplelink_cc13x0_sdk_4_10_03_10/kernel/tirtos/packages/" -I"C:/ti/ccs1020/xdctools_3_62_00_08_core/packages/" -I"../" -I"/packages//"  -IC:/ti/ccs1020/ccs/tools/compiler/ti-cgt-arm_20.2.4.LTS/include 
+INCS = $(BIOS_INC) $(ANNEX_INCS) -I"C:/ti/simplelink_cc13x0_sdk_4_10_03_10/source/" -I"C:/ti/simplelink_cc13x0_sdk_4_10_03_10/kernel/tirtos/packages/" -I"C:/ti/ccs1020/xdctools_3_62_00_08_core/packages/" -I"../" -I"/packages//"  -IC:/ti/ccs1020/ccs/tools/compiler/ti-cgt-arm_20.2.5.LTS/include 
 
-CC = C:/ti/ccs1020/ccs/tools/compiler/ti-cgt-arm_20.2.4.LTS/bin/armcl -c $(CCOPTS)
-ASM = C:/ti/ccs1020/ccs/tools/compiler/ti-cgt-arm_20.2.4.LTS/bin/armcl -c $(CCOPTS)
-AR = C:/ti/ccs1020/ccs/tools/compiler/ti-cgt-arm_20.2.4.LTS/bin/armar rq
+CC = C:/ti/ccs1020/ccs/tools/compiler/ti-cgt-arm_20.2.5.LTS/bin/armcl -c $(CCOPTS)
+ASM = C:/ti/ccs1020/ccs/tools/compiler/ti-cgt-arm_20.2.5.LTS/bin/armcl -c $(CCOPTS)
+AR = C:/ti/ccs1020/ccs/tools/compiler/ti-cgt-arm_20.2.5.LTS/bin/armar rq
 
 DEL = C:/ti/ccs1020/xdctools_3_62_00_08_core/packages/../bin/rm -f
 CP = C:/ti/ccs1020/xdctools_3_62_00_08_core/packages/../bin/cp -f
